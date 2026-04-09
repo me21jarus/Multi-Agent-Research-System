@@ -17,12 +17,18 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Initialize the LLM once (module-level) so it's not recreated on every call
-llm = ChatGroq(
-    model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
-    api_key=os.getenv("GROQ_API_KEY"),
-    temperature=0.3,   # low temperature = more factual, less creative
-)
+# Lazy singleton — initialized on first request, not at import time
+_llm = None
+
+def get_llm():
+    global _llm
+    if _llm is None:
+        _llm = ChatGroq(
+            model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
+            api_key=os.getenv("GROQ_API_KEY"),
+            temperature=0.3,
+        )
+    return _llm
 
 SUMMARIZER_PROMPT = ChatPromptTemplate.from_messages([
     ("system", """You are a research summarizer. Your job is to extract and organize
@@ -75,7 +81,7 @@ def summarizer_agent(state: ResearchState) -> ResearchState:
 
     formatted_results = _format_search_results(state["search_results"])
 
-    chain = SUMMARIZER_PROMPT | llm
+    chain = SUMMARIZER_PROMPT | get_llm()
     response = chain.invoke({
         "query": state["query"],
         "search_results": formatted_results,

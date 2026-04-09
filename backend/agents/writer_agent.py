@@ -21,11 +21,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-llm = ChatGroq(
-    model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
-    api_key=os.getenv("GROQ_API_KEY"),
-    temperature=0.6,   # moderate creativity for natural-sounding prose
-)
+_llm = None
+
+def get_llm():
+    global _llm
+    if _llm is None:
+        _llm = ChatGroq(
+            model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
+            api_key=os.getenv("GROQ_API_KEY"),
+            temperature=0.6,
+        )
+    return _llm
 
 WRITER_PROMPT = ChatPromptTemplate.from_messages([
     ("system", """You are an expert research writer. You produce clear, well-structured,
@@ -67,7 +73,7 @@ def writer_agent(state: ResearchState) -> ResearchState:
 
     source_urls = _extract_sources(state["search_results"])
 
-    chain = WRITER_PROMPT | llm
+    chain = WRITER_PROMPT | get_llm()
     response = chain.invoke({
         "query": state["query"],
         "summary": state["summary"],

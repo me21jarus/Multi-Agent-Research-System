@@ -20,11 +20,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-llm = ChatGroq(
-    model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
-    api_key=os.getenv("GROQ_API_KEY"),
-    temperature=0.1,   # very low — fact-checking needs to be precise
-)
+_llm = None
+
+def get_llm():
+    global _llm
+    if _llm is None:
+        _llm = ChatGroq(
+            model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
+            api_key=os.getenv("GROQ_API_KEY"),
+            temperature=0.1,
+        )
+    return _llm
 
 FACT_CHECKER_PROMPT = ChatPromptTemplate.from_messages([
     ("system", """You are a rigorous fact-checker. Your job is to verify the claims
@@ -78,7 +84,7 @@ def fact_checker_agent(state: ResearchState) -> ResearchState:
 
     formatted_results = _format_search_results(state["search_results"])
 
-    chain = FACT_CHECKER_PROMPT | llm
+    chain = FACT_CHECKER_PROMPT | get_llm()
     response = chain.invoke({
         "query": state["query"],
         "summary": state["summary"],
