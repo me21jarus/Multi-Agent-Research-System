@@ -22,7 +22,7 @@ import uuid
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from backend.graph.research_graph import research_graph
+from backend.graph.research_graph import get_research_graph
 from backend.graph.state import ResearchState
 
 router = APIRouter(prefix="/api")
@@ -87,8 +87,9 @@ async def research(request: ResearchRequest):
         config = {"configurable": {"thread_id": thread_id}}
 
         try:
+            graph = get_research_graph()
             # Stream node completions from LangGraph
-            for step in research_graph.stream(initial_state, config=config):
+            for step in graph.stream(initial_state, config=config):
                 node_name = list(step.keys())[0]
                 message = NODE_MESSAGES.get(node_name, f"{node_name} complete")
 
@@ -100,7 +101,7 @@ async def research(request: ResearchRequest):
                 })
 
             # Pipeline done — get the full merged final state
-            full_state = research_graph.get_state(config).values
+            full_state = graph.get_state(config).values
 
             # Extract sources from search results
             sources = [

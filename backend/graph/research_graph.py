@@ -71,5 +71,12 @@ def build_research_graph(use_checkpointer: bool = False):
     return graph.compile()
 
 
-# Module-level compiled graph instance (reused across requests)
-research_graph = build_research_graph(use_checkpointer=True)
+# Lazy singleton — built on first request, not at import time.
+# This prevents Railway healthcheck timeouts caused by heavy startup imports.
+_graph = None
+
+def get_research_graph():
+    global _graph
+    if _graph is None:
+        _graph = build_research_graph(use_checkpointer=True)
+    return _graph
