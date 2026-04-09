@@ -7,7 +7,8 @@
  *   So we use fetch() with a ReadableStream reader instead.
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+// Strip trailing slash to prevent double-slash URLs like //api/research
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/$/, "");
 
 export type ProgressEvent = {
   type: "progress";
