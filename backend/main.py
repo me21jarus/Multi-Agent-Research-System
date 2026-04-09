@@ -23,7 +23,7 @@ app = FastAPI(
 # In production, replace "*" with your actual frontend domain.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://multi-agent-research-system-production.up.railway.app/"],
+    allow_origins=["https://multi-agent-research-system-omega.vercel.app", "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
